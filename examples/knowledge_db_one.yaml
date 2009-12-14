@@ -1,0 +1,49 @@
+rules:
+    -
+        causes:
+            - 
+                fact: K
+            - 
+                fact: L
+        effects:
+            - J
+    -
+        causes:
+            -
+                fact: F
+            -
+                fact: J
+        effects:
+            - M
+    -
+        causes:
+            -
+                fact: F
+        effects:
+            - I
+    -
+        causes:
+            -
+                fact: L
+            -
+                fact: I
+        effects:
+            - N
+    -
+        causes:
+            -
+                fact: N
+        effects:
+            - G
+    -
+        causes:
+            -
+                fact: M
+        effects:
+            - G
+    -
+        causes:
+            -
+                fact: G
+        effects:
+            - H
