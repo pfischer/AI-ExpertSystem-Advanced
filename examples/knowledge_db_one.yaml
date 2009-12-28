@@ -2,48 +2,49 @@ rules:
     -
         causes:
             - 
-                fact: K
+                name: K
+                factor: 0.5
             - 
-                fact: L
-        effects:
+                name: L
+        goals:
             - J
     -
         causes:
             -
-                fact: F
+                name: F
             -
-                fact: J
-        effects:
+                name: J
+        goals:
             - M
     -
         causes:
             -
-                fact: F
-        effects:
+                name: F
+        goals:
             - I
     -
         causes:
             -
-                fact: L
+                name: L
             -
-                fact: I
-        effects:
+                name: I
+        goals:
             - N
     -
         causes:
             -
-                fact: N
-        effects:
+                name: N
+        goals:
             - G
     -
         causes:
             -
-                fact: M
-        effects:
+                name: M
+        goals:
             - G
     -
         causes:
             -
-                fact: G
-        effects:
+                name: G
+        goals:
             - H

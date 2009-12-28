@@ -16,20 +16,20 @@ sub read {
     confess "You can't call KnowedgeDB::Base! (abstract method)";
 }
 
-sub rule_effects {
+sub rule_goals {
     my ($self, $rule) = @_;
 
     if (!defined $self->{'rules'}->[$rule]) {
         confess "Rule $rule does not exist";
     }
     my @facts;
-    # Get all the facts of this effect (usually only one)
-    foreach (@{$self->{'rules'}->[$rule]->{'effects'}}) {
+    # Get all the facts of this goal (usually only one)
+    foreach (@{$self->{'rules'}->[$rule]->{'goals'}}) {
         push(@facts, $_);
     }
-    my $effects_dict = AI::ExpertSystem::Complex::Dictionary->new(
+    my $goals_dict = AI::ExpertSystem::Complex::Dictionary->new(
             stack => \@facts);
-    return $effects_dict;
+    return $goals_dict;
 }
 
 
@@ -42,7 +42,7 @@ sub rule_causes {
     my @facts;
     # Get all the facts of this cause
     foreach (@{$self->{'rules'}->[$rule]->{'causes'}}) {
-        push(@facts, $_->{'fact'});
+        push(@facts, $_->{'name'});
     }
     my $causes_dict = AI::ExpertSystem::Complex::Dictionary->new(
             stack => \@facts);
