@@ -3,7 +3,7 @@
 #
 # Author(s): Pablo Fischer (pfischer@cpan.org)
 # Created: 11/29/2009 19:12:25 PST 19:12:25
-package AI::ExpertSystem::Complex::KnowledgeDB::Factory;
+package AI::ExpertSystem::Advanced::KnowledgeDB::Factory;
 
 use strict;
 use warnings;
@@ -18,7 +18,8 @@ sub new {
     return $self;
 }
 
-__PACKAGE__->register_factory_type(yaml => 'AI::ExpertSystem::Complex::KnowledgeDB::YAML');
+__PACKAGE__->register_factory_type(yaml =>
+        'AI::ExpertSystem::Advanced::KnowledgeDB::YAML');
 
 1;
 

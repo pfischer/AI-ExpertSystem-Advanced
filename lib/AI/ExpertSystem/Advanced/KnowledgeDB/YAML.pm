@@ -1,14 +1,14 @@
 #
-# AI::ExpertSystem::Complex::KnowledgeDB::YAML
+# AI::ExpertSystem::Advanced::KnowledgeDB::YAML
 #
 # Author(s): Pablo Fischer (pfischer@cpan.org)
 # Created: 12/13/2009 16:12:43 PST 16:12:43
-package AI::ExpertSystem::Complex::KnowledgeDB::YAML;
+package AI::ExpertSystem::Advanced::KnowledgeDB::YAML;
 
 use Moose;
 use YAML::Syck;
 
-extends 'AI::ExpertSystem::Complex::KnowledgeDB::Base';
+extends 'AI::ExpertSystem::Advanced::KnowledgeDB::Base';
 
 =head1 Attributes
 

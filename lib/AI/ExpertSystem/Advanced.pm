@@ -1,13 +1,13 @@
 #
-# AI::ExpertSystem::Complex
+# AI::ExpertSystem::Advanced
 #
 # Author(s): Pablo Fischer (pfischer@cpan.org)
 # Created: 11/29/2009 18:28:30 CST 18:28:30
-package AI::ExpertSystem::Complex;
+package AI::ExpertSystem::Advanced;
 
 =head1 NAME
 
-AI::ExpertSystem::Complex - Expert System with complete algorithms
+AI::ExpertSystem::Advanced - Expert System with complete algorithms
 
 =head1 DESCRIPTION
 
@@ -38,11 +38,11 @@ Uses certainty factors.
 
 =cut
 use Moose;
-use AI::ExpertSystem::Complex::KnowledgeDB::Base;
-use AI::ExpertSystem::Complex::Viewer::Base;
-use AI::ExpertSystem::Complex::Viewer::Factory;
-use AI::ExpertSystem::Complex::Dictionary;
-use AI::ExpertSystem::Complex::AdvancedDictionary;
+use AI::ExpertSystem::Advanced::KnowledgeDB::Base;
+use AI::ExpertSystem::Advanced::Viewer::Base;
+use AI::ExpertSystem::Advanced::Viewer::Factory;
+use AI::ExpertSystem::Advanced::Dictionary;
+use AI::ExpertSystem::Advanced::AdvancedDictionary;
 use Time::HiRes qw(gettimeofday);
 use YAML::Syck qw(Dump);
 
@@ -69,7 +69,7 @@ has 'initial_facts' => (
 
 =item B<initial_facts_dict>
 
-For making easier your job, L<AI::ExpertSystem::Complex> asks you only the name
+For making easier your job, L<AI::ExpertSystem::Advanced> asks you only the name
 of the C<initial_facts>. Once you provide these initial facts then a dictinary
 is created.
 
@@ -81,7 +81,7 @@ the initial facts).
 =cut
 has 'initial_facts_dict' => (
         is => 'ro',
-        isa => 'AI::ExpertSystem::Complex::Dictionary');
+        isa => 'AI::ExpertSystem::Advanced::Dictionary');
 
 =item B<goals_to_check>
 
@@ -112,7 +112,7 @@ data found in C<goals_to_check>.
 =cut
 has 'goals_to_check_dict' => (
         is => 'ro',
-        isa => 'AI::ExpertSystem::Complex::Dictionary');
+        isa => 'AI::ExpertSystem::Advanced::Dictionary');
 
 =item B<inference_facts>
 
@@ -120,24 +120,24 @@ Inference facts are basically the core of an expert system. These are facts
 that are found and copied when the a set of facts (initial or inference)
 match with the causes of a goal.
 
-C<inference_facts> is a L<AI::ExpertSystem::Complex::AdvancedDictionary>, it
+C<inference_facts> is a L<AI::ExpertSystem::Advanced::AdvancedDictionary>, it
 will store the name of the fact, the rule that caused these facts to be copied
 to this dictionary, the sign and the algorithm that triggered the copy.
 
 =cut
 has 'inference_facts' => (
         is => 'ro',
-        isa => 'AI::ExpertSystem::Complex::AdvancedDictionary');
+        isa => 'AI::ExpertSystem::Advanced::AdvancedDictionary');
        
 =item B<knowledge_db>
 
-The object reference of the knowledge database L<AI::ExpertSystem::Complex>
+The object reference of the knowledge database L<AI::ExpertSystem::Advanced>
 is using.
 
 =cut
 has 'knowledge_db' => (
         is => 'rw',
-        isa => 'AI::ExpertSystem::Complex::KnowledgeDB::Base',
+        isa => 'AI::ExpertSystem::Advanced::KnowledgeDB::Base',
         required => 1);
 
 =item B<asked_facts>
@@ -155,7 +155,7 @@ exists. All these asked facts will be stored here.
 =cut
 has 'asked_facts' => (
         is => 'ro',
-        isa => 'AI::ExpertSystem::Complex::Dictionary');
+        isa => 'AI::ExpertSystem::Advanced::Dictionary');
 
 =item B<visited_rules>
 
@@ -183,23 +183,23 @@ has 'verbose' => (
 
 =item B<viewer>
 
-Is the object L<AI::ExpertSystem::Complex> will be using for printing what is
+Is the object L<AI::ExpertSystem::Advanced> will be using for printing what is
 happening and for interacting with the user (such as asking the
 C<asked_facts>).
 
 This is practical if you want to use a viewer object that is not provided by
-L<AI::ExpertSystem::Complex::Viewer::Factory>.
+L<AI::ExpertSystem::Advanced::Viewer::Factory>.
 
 =cut
 has 'viewer' => (
         is => 'rw',
-        isa => 'AI::ExpertSystem::Complex::Viewer::Base');
+        isa => 'AI::ExpertSystem::Advanced::Viewer::Base');
 
 =item B<viewer_class>
 
 Is the the class name of the C<viewer>.
 
-You can decide to use the viewers L<AI::ExpertSystem::Complex::Viewer::Factory>
+You can decide to use the viewers L<AI::ExpertSystem::Advanced::Viewer::Factory>
 offers, in this case you can pass the object or only the class name of your
 favorite viewer.
 
@@ -357,7 +357,7 @@ sub is_rule_shot {
 =head2 B<get_goals_by_rule($rule)>
 
 Will ask the C<knowledge_db> for the goals of the given C<$rule>. A
-L<AI::ExpertSystem::Complex::Dictionary> will be returned.
+L<AI::ExpertSystem::Advanced::Dictionary> will be returned.
 
 =cut
 sub get_goals_by_rule {
@@ -368,7 +368,7 @@ sub get_goals_by_rule {
 =head2 B<get_causes_by_rule($rule)>
 
 Will ask the C<knowledge_db> for the causes of the given C<$rule>. A
-L<AI::ExpertSystem::Complex::Dictionary> will be returned.
+L<AI::ExpertSystem::Advanced::Dictionary> will be returned.
 
 =cut
 sub get_causes_by_rule {
@@ -652,17 +652,17 @@ sub BUILD {
 
     if (!defined $self->{'viewer'}) {
         if (defined $self->{'viewer_class'}) { 
-            $self->{'viewer'} = AI::ExpertSystem::Complex::Viewer::Factory->new(
+            $self->{'viewer'} = AI::ExpertSystem::Advanced::Viewer::Factory->new(
                     $self->{'viewer_class'});
         } else {
             confess "Sorry, provide a viewer or a viewer_class";
         }
     }
-    $self->{'initial_facts_dict'} = AI::ExpertSystem::Complex::Dictionary->new(
+    $self->{'initial_facts_dict'} = AI::ExpertSystem::Advanced::Dictionary->new(
             stack => $self->{'initial_facts'});
-    $self->{'inference_facts'} = AI::ExpertSystem::Complex::AdvancedDictionary->new;
-    $self->{'asked_facts'} = AI::ExpertSystem::Complex::Dictionary->new;
-    $self->{'goals_to_check_dict'} = AI::ExpertSystem::Complex::Dictionary->new(
+    $self->{'inference_facts'} = AI::ExpertSystem::Advanced::AdvancedDictionary->new;
+    $self->{'asked_facts'} = AI::ExpertSystem::Advanced::Dictionary->new;
+    $self->{'goals_to_check_dict'} = AI::ExpertSystem::Advanced::Dictionary->new(
             stack => $self->{'goals_to_check'});
 }
 

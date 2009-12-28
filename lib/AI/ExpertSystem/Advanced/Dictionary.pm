@@ -1,9 +1,9 @@
 #
-# AI::ExpertSystem::Complex::Dictionary
+# AI::ExpertSystem::Advanced::Dictionary
 #
 # Author(s): Pablo Fischer (pfischer@cpan.org)
 # Created: 11/29/2009 20:06:22 CST 20:06:22
-package AI::ExpertSystem::Complex::Dictionary;
+package AI::ExpertSystem::Advanced::Dictionary;
 
 use Moose;
 

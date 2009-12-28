@@ -1,12 +1,12 @@
 #
-# AI::ExpertSystem::Complex::KnowledgeDB::Base
+# AI::ExpertSystem::Advanced::KnowledgeDB::Base
 #
 # Author(s): Pablo Fischer (pfischer@cpan.org)
 # Created: 11/29/2009 19:14:28 PST 19:14:28
-package AI::ExpertSystem::Complex::KnowledgeDB::Base;
+package AI::ExpertSystem::Advanced::KnowledgeDB::Base;
 
 use Moose;
-use AI::ExpertSystem::Complex::Dictionary;
+use AI::ExpertSystem::Advanced::Dictionary;
 
 has 'rules' => (
         is => 'ro',
@@ -27,7 +27,7 @@ sub rule_goals {
     foreach (@{$self->{'rules'}->[$rule]->{'goals'}}) {
         push(@facts, $_);
     }
-    my $goals_dict = AI::ExpertSystem::Complex::Dictionary->new(
+    my $goals_dict = AI::ExpertSystem::Advanced::Dictionary->new(
             stack => \@facts);
     return $goals_dict;
 }
@@ -44,7 +44,7 @@ sub rule_causes {
     foreach (@{$self->{'rules'}->[$rule]->{'causes'}}) {
         push(@facts, $_->{'name'});
     }
-    my $causes_dict = AI::ExpertSystem::Complex::Dictionary->new(
+    my $causes_dict = AI::ExpertSystem::Advanced::Dictionary->new(
             stack => \@facts);
     return $causes_dict;
 }

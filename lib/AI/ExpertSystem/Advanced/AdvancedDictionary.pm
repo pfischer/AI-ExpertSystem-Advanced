@@ -1,12 +1,12 @@
 #
-# AI::ExpertSystem::Complex::AdvancedDictionary
+# AI::ExpertSystem::Advanced::AdvancedDictionary
 #
 # Author(s): Pablo Fischer (pfischer@cpan.org)
 # Created: 11/29/2009 20:06:22 CST 20:06:22
-package AI::ExpertSystem::Complex::AdvancedDictionary;
+package AI::ExpertSystem::Advanced::AdvancedDictionary;
 
 use Moose;
-extends 'AI::ExpertSystem::Complex::Dictionary';
+extends 'AI::ExpertSystem::Advanced::Dictionary';
 
 sub add {
     my ($self, $id, $name, $sign, $factor, $algorithm, $rule) = @_;

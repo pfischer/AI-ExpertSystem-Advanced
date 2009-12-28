@@ -1,24 +1,24 @@
 #
-# AI::ExpertSystem::Complex::Viewer::Terminal
+# AI::ExpertSystem::Advanced::Viewer::Terminal
 #
 # Author(s): Pablo Fischer (pfischer@cpan.org)
 # Created: 12/13/2009 15:44:23 PST 15:44:23
-package AI::ExpertSystem::Complex::Viewer::Terminal;
+package AI::ExpertSystem::Advanced::Viewer::Terminal;
 
 =head1 NAME
 
-AI::ExpertSystem::Complex::Viewer::Terminal - Viewer for terminal
+AI::ExpertSystem::Advanced::Viewer::Terminal - Viewer for terminal
 
 =head1 DESCRIPTION
 
-Extends from L<AI::ExpertSystem::Complex::Viewer::Base> and its main purpose is
+Extends from L<AI::ExpertSystem::Advanced::Viewer::Base> and its main purpose is
 to interact with a (console) terminal.
 
 =cut
 use Moose;
 use Term::ReadLine;
 
-extends 'AI::ExpertSystem::Complex::Viewer::Base';
+extends 'AI::ExpertSystem::Advanced::Viewer::Base';
 
 =head1 Attribtes
 
@@ -74,7 +74,7 @@ Will be used to ask the user for some information. It will receive a string,
 the question to ask and an array of all the possible options.
 
 Please return only one option and this should be any of the ones listed in
-C<@options> cause otherwise L<AI::ExpertSystem::Complex> will die.
+C<@options> cause otherwise L<AI::ExpertSystem::Advanced> will die.
 
 =cut
 sub ask {

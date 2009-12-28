@@ -1,9 +1,9 @@
 #
-# AI::ExpertSystem::Complex::Viewer::Factory
+# AI::ExpertSystem::Advanced::Viewer::Factory
 #
 # Author(s): Pablo Fischer (pfischer@cpan.org)
 # Created: 11/29/2009 19:12:25 PST 19:12:25
-package AI::ExpertSystem::Complex::Viewer::Factory;
+package AI::ExpertSystem::Advanced::Viewer::Factory;
 
 use strict;
 use warnings;
@@ -18,7 +18,8 @@ sub new {
     return $self;
 }
 
-__PACKAGE__->register_factory_type(terminal => 'AI::ExpertSystem::Complex::Viewer::Terminal');
+__PACKAGE__->register_factory_type(terminal =>
+        'AI::ExpertSystem::Advanced::Viewer::Terminal');
 
 1;
 
