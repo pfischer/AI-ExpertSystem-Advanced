@@ -20,6 +20,8 @@ context cause otherwise L<AI::ExpertSystem::Advanced> will die.
 =cut
 use Moose;
 
+our $VERSION = '0.01';
+
 use constant NO_ABSTRACT_CLASS_MSG =>
     qq#Sorry, you can't call the abstract class!#;
 
@@ -65,6 +67,29 @@ C<@options> cause otherwise L<AI::ExpertSystem::Advanced> will die.
 sub ask {
     confess NO_ABSTRACT_CLASS_MSG;
 }
+
+=head2 B<explain($yaml_summary)>
+
+Uses to explain what happened. The passed argument is in YAML string that
+has all the information required to make a good explanation.
+
+=cut
+sub explain {
+    confess NO_ABSTRACT_CLASS_MSG;
+}
+
+=head1 AUTHOR
+ 
+Pablo Fischer (pablo@pablo.com.mx).
+
+=head1 COPYRIGHT
+ 
+Copyright (C) 2010 by Pablo Fischer.
+ 
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
+
+=cut
 
 1;
 

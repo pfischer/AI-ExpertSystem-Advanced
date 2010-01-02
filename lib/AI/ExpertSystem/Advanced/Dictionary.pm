@@ -5,20 +5,88 @@
 # Created: 11/29/2009 20:06:22 CST 20:06:22
 package AI::ExpertSystem::Advanced::Dictionary;
 
-use Moose;
+=head1 NAME
 
+AI::ExpertSystem::Advanced::Dictionary - Array/hash dictionary
+
+=head1 DESCRIPTION
+
+The dictionary offers a unified interface for:
+
+=over 4
+
+=item 1
+
+Reading through a list of items with a minimal use of memory since it offers an
+iterator that works with a stack. So everytime it gets asked for the next
+element it I<drops> the first or last element of the stack.
+
+=item 2
+
+Finding an element in the stack.
+
+=item 3
+
+Adding or deleting elements from the stack.
+
+=back
+
+=cut
+use Moose;
+use List::MoreUtils qw(firstidx);
+
+our $VERSION = '0.01';
+
+=head1 Attributes
+
+=over 4
+
+=item B<stack>
+
+An array with all the keys of C<stack_hash>. Useful for creating the
+C<iterable_array> and for knowing the order of the items as they get added or
+removed.
+
+=cut
 has 'stack' => (
         is => 'rw',
         isa => 'ArrayRef');
 
+=item B<stack_hash>
+
+The original hash, has all the elements with all their properties (eg extra
+keys). The I<disadvantage> of it is that it doesn't keeps the order of the
+elements, hence the need of C<stack>.
+
+=cut
 has 'stack_hash' => (
         is => 'ro',
         isa => 'HashRef[Str]');
 
+=item B<iterable_array>
+
+Used by the C<iterate()> and C<iterate_reverse()> methods. It starts as a copy
+of C<stack> and as the iterate methods start running this array starts getting
+I<reduced> until it gets to an empty list.
+
+=back
+
+=cut
 has 'iterable_array' => (
         is => 'ro',
         isa => 'ArrayRef');
 
+=head1 Methods
+
+=head2 B<find($look_for, $find_by)>
+
+Looks for a given value (C<$look_for>). By default it will look for the value
+by reading the C<id> of each item, however this can be changed by passing
+a different hash key (C<$find_by>).
+
+In case there's no match, C<undef> is returned.
+
+=cut
 sub find {
     my ($self, $look_for, $find_by) = @_;
 
@@ -27,7 +95,7 @@ sub find {
     }
 
     if ($find_by eq 'id') {
-        return defined $self->{$look_for};
+        return defined $self->{'stack_hash'}->{$look_for};
     }
 
     foreach my $key (keys %{$self->{'stack_hash'}}) {
@@ -38,60 +106,145 @@ sub find {
     return undef;
 }
 
+=head2 B<find_by_name($name)>
+
+A simple wrapper of C<find()>. It will look for the the name of a given item
+in our C<stack_hash>.
+
+=cut
 sub find_by_name {
     my ($self, $name) = @_;
 
     return $self->find($name, 'name');
 }
 
-sub get_sign {
-    my ($self, $id) = @_;
+=head2 B<get_value($id, $key)>
 
-    if (!defined $self->{'stack_hash'}->{$id}->{'sign'}) {
+The L<AI::ExpertSystem::Advanced::Dictionary> consists of a hash of elements,
+each one of the elements have properties (eg, extra keys).
+
+This method looks for the value of the given C<$key> of a given element id.
+
+It will return the value, but if element doesn't have the given C<$key> then
+C<undef> will be returned.
+
+=cut
+sub get_value {
+    my ($self, $id, $key) = @_;
+
+    if (!defined $self->{'stack_hash'}->{$id}) {
         warn "$id does not exist in this dictionary";
         return undef;
     }
-    return $self->{'stack_hash'}->{$id}->{'sign'};
+    if (defined $self->{'stack_hash'}->{$id}->{$key}) {
+        return $self->{'stack_hash'}->{$id}->{$key};
+    } else {
+        return undef;
+    }
 }
 
-sub add {
-    my ($self, $id, $name, $sign) = @_;
-    
-    $self->{'stack_hash'}->{$id} = {
-        name => $name,
-        sign => $sign
-    };
-    push(@{$self->{'stack'}}, $id);
+=head2 B<append($id, %extra_keys)>
+
+Adds a new element to the C<stack_hash> and C<stack>. The element gets added to
+the end of C<stack>.
+
+The C<$id> parameter specifies the id of the new element and the next parameter
+is a stack of I<extra> keys.
+
+=cut
+sub append {
+    my $self = shift;
+    my $id = shift;
+
+    return $self->_add($id, undef, @_);
 }
 
+=head2 B<prepend($id, %extra_keys)>
+
+Same as C<append()>, but the element gets added to the top of the C<stack>.
+
+=cut
+sub prepend {
+    my $self = shift;
+    my $id = shift;
+
+    return $self->_add($id, 1, @_);
+}
+
+=head2 B<remove($id)>
+
+Removes the element that matches the given C<$id> from C<stack_hash> and
+C<stack>.
+
+Returns true if the removal is successful, otherwise false is returned.
+
+=cut
 sub remove {
     my ($self, $id) = @_;
 
-    if (my $pos = $self->find($id)) {
-        delete(@{$self->{'stack'}}[$id]);
+    if (my $key = $self->find($id)) {
+        delete($self->{'stack_hash'}->{$key});
+        # Find the index in the array, lets suppose our arrays are big
+        my $index = List::MoreUtils::first_index {
+            defined $_ and $_ eq $key
+        } @{$self->{'stack'}};
+        delete(@{$self->{'stack'}}[$index]);
         return 1;
     }
     return 0;
 }
 
+=head2 B<size()>
+
+Returns the size of C<stack>.
+
+=cut
+sub size {
+    my ($self) = @_;
+
+    return scalar(@{$self->{'stack'}});
+}
+
+=head2 B<iterate()>
+
+Returns the first element of the C<iterable_array> and C<iterable_array> is
+reduced by one.
+
+If no more items are found in C<iterable_array>, C<undef> is returned.
+
+=cut
 sub iterate {
     my ($self) = @_;
 
     return shift(@{$self->{'iterable_array'}});
 }
 
+=head2 B<iterate_reverse()>
+
+Same as C<iterate()>, but instead of returning the first element, it returns
+the last element of C<iterable_array>.
+
+=cut
+sub iterate_reverse {
+    my ($self) = @_;
+
+    return pop(@{$self->{'iterable_array'}});
+}
+
+=head2 B<populate_iterable_array()>
+
+The C<iterable_array> gets populated when a dictionary instance is created,
+however if new items are added or removed then it's B<extremely> needed to call
+this method so C<iterable_array> gets populated again.
+
+=cut
 sub populate_iterable_array {
     my ($self) = @_;
 
-    @{$self->{'iterable_array'}} = keys %{$self->{'stack_hash'}};
+    @{$self->{'iterable_array'}} = @{$self->{'stack'}};
 }
 
-sub reset_iteration {
-    my ($self) = @_;
-
-    $self->{'iteration_position'} = 0;
-}
-
+# No need to document it, used by L<Moose>.
 sub BUILD {
     my ($self) = @_;
 
@@ -110,5 +263,30 @@ sub BUILD {
     }
     $self->populate_iterable_array();
 }
+
+################# Private methods ######################
+sub _add {
+    my ($self, $id, $prepend, $properties) = @_;
+    
+    $self->{'stack_hash'}->{$id} = $properties;
+    if ($prepend) {
+        unshift(@{$self->{'stack'}}, $id);
+    } else {
+        push(@{$self->{'stack'}}, $id);
+    }
+}
+
+=head1 AUTHOR
+ 
+Pablo Fischer (pablo@pablo.com.mx).
+
+=head1 COPYRIGHT
+ 
+Copyright (C) 2010 by Pablo Fischer.
+ 
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
+
+=cut
 
 1;

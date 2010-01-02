@@ -16,9 +16,12 @@ to interact with a (console) terminal.
 
 =cut
 use Moose;
+use Term::UI;
 use Term::ReadLine;
 
 extends 'AI::ExpertSystem::Advanced::Viewer::Base';
+
+our $VERSION = '0.01';
 
 =head1 Attribtes
 
@@ -80,11 +83,28 @@ C<@options> cause otherwise L<AI::ExpertSystem::Advanced> will die.
 sub ask {
     my ($self, $msg, $options) = @_;
 
+    my %valid_choices = (
+        'Y' => '+',
+        'N' => '-',
+        'U' => '~');
+
     my $reply = $self->{'readline'}->get_reply(
-            prompt => $msg,
-            choices => $options);
-    return $reply;
+            prompt => $msg . ' ',
+            choices => [qw|Y N U|]);
+    return $valid_choices{$reply};
 }
+
+=head2 B<explain($yaml_summary)>
+
+Explains as a human what happened.
+
+=cut
+sub explain {
+    my ($self, $summary) = @_;
+
+    print $summary;
+}
+
 
 # Called when the object is created
 sub BUILD {
@@ -92,5 +112,19 @@ sub BUILD {
 
     $self->{'readline'} = Term::ReadLine->new('questions');
 }
+
+=head1 AUTHOR
+ 
+Pablo Fischer (pablo@pablo.com.mx).
+
+=head1 COPYRIGHT
+ 
+Copyright (C) 2010 by Pablo Fischer.
+ 
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
+
+=cut
+
 1;
 
