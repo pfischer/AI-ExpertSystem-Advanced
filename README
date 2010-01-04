@@ -346,3 +346,15 @@ Methods
     If $return is defined (eg, it got any parameter) then the result wont be
     passed to the "viewer", instead it will be returned as a string.
 
+SEE ALSO
+    Take a look AI::ExpertSystem::Simple too.
+
+AUTHOR
+    Pablo Fischer (pablo@pablo.com.mx).
+
+COPYRIGHT
+    Copyright (C) 2010 by Pablo Fischer.
+
+    This library is free software; you can redistribute it and/or modify it
+    under the same terms as Perl itself.
+
