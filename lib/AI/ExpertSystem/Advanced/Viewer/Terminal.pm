@@ -21,7 +21,7 @@ use Term::ReadLine;
 
 extends 'AI::ExpertSystem::Advanced::Viewer::Base';
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 =head1 Attribtes
 
@@ -42,7 +42,7 @@ has 'readline' => (
 
 =head2 B<debug($msg)>
 
-Basically just does a print but prepends the "DEBUG" string to the message.
+Basically just prints the given C<$msg> but prepends the "DEBUG" string to it.
 
 =cut
 sub debug {
@@ -52,7 +52,7 @@ sub debug {
 
 =head2 B<print($msg)>
 
-Just does a print of the given message.
+Simply prints the given C<$msg>.
 
 =cut
 sub print {
@@ -76,9 +76,6 @@ sub print_error {
 Will be used to ask the user for some information. It will receive a string,
 the question to ask and an array of all the possible options.
 
-Please return only one option and this should be any of the ones listed in
-C<@options> cause otherwise L<AI::ExpertSystem::Advanced> will die.
-
 =cut
 sub ask {
     my ($self, $msg, $options) = @_;
@@ -96,7 +93,7 @@ sub ask {
 
 =head2 B<explain($yaml_summary)>
 
-Explains as a human what happened.
+Explains what happened.
 
 =cut
 sub explain {
@@ -127,4 +124,3 @@ it under the same terms as Perl itself.
 =cut
 
 1;
-

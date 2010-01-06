@@ -27,7 +27,7 @@ Finding an element in the stack.
 
 =item 3
 
-Adding or deleting elements from the stack.
+Adding or removing elements from the stack.
 
 =back
 
@@ -35,7 +35,7 @@ Adding or deleting elements from the stack.
 use Moose;
 use List::MoreUtils qw(firstidx);
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 =head1 Attributes
 
@@ -84,7 +84,7 @@ Looks for a given value (C<$look_for>). By default it will look for the value
 by reading the C<id> of each item, however this can be changed by passing
 a different hash key (C<$find_by>).
 
-In case there's no match, C<undef> is returned.
+In case there's no match C<undef> is returned.
 
 =cut
 sub find {
@@ -121,9 +121,9 @@ sub find_by_name {
 =head2 B<get_value($id, $key)>
 
 The L<AI::ExpertSystem::Advanced::Dictionary> consists of a hash of elements,
-each one of the elements have properties (eg, extra keys).
+each element has its own properties (eg, extra keys).
 
-This method looks for the value of the given C<$key> of a given element id.
+This method looks for the value of the given C<$key> of a given element C<id>.
 
 It will return the value, but if element doesn't have the given C<$key> then
 C<undef> will be returned.
@@ -210,7 +210,7 @@ sub size {
 Returns the first element of the C<iterable_array> and C<iterable_array> is
 reduced by one.
 
-If no more items are found in C<iterable_array>, C<undef> is returned.
+If no more items are found in C<iterable_array> then C<undef> is returned.
 
 =cut
 sub iterate {

@@ -1,9 +1,9 @@
 NAME
-    AI::ExpertSystem::Advanced - Expert System with complete algorithms
+    AI::ExpertSystem::Advanced - Expert System with backward, forward and
+    mixed algorithms
 
 DESCRIPTION
-    Inspired in AI::ExpertSystem::Simple but with additional features, such
-    as:
+    Inspired in AI::ExpertSystem::Simple but with additional features:
 
     *   Uses backward, forward and mixed algorithms.
 
@@ -11,15 +11,14 @@ DESCRIPTION
         via a terminal or with a friendly user interface.
 
     *   The knowledge database can be stored in any format such as YAML, XML
-        or databases. You just need to select what driver to use and you are
+        or databases. You just need to choose what driver to use and you are
         done.
 
     *   Uses certainty factors.
 
 Attributes
     initial_facts
-        A list/set of initial facts the forward andd backward algorithms
-        will start using.
+        A list/set of initial facts the algorithms start using.
 
         During the forward algorithm the task is to find a list of goals
         caused by these initial facts (the only data it has at that moment).
@@ -30,21 +29,20 @@ Attributes
 
     initial_facts_dict
         For making easier your job, AI::ExpertSystem::Advanced asks you only
-        the name of the "initial_facts". Once you provide these initial
-        facts then a dictinary is created.
+        the id of the "initial_facts". Once you provide them then a
+        dictinary is created.
 
         This "initial_facts_dict" dictionary basically provides a standard
-        interface to get the sign of the facts and to add new facts as it
-        starts finding new goals (remember that once a goal is found all of
-        its causes will be part of the initial facts).
+        interface to get the sign of the facts.
 
     goals_to_check
         When doing the "backward()" algorithm it's needed to have at least
         one goal (aka hypothesis).
 
         This could be pretty similar to "initial_facts", with the difference
-        that the initial facts are used more with the causes of the rules
-        and the goals, well, with the goals of each rule (usually one).
+        that the initial facts are used more with the causes of the rules,
+        and this one with the goals (usually one in a well defined knowledge
+        database).
 
         From our example of symptoms and diseases lets imagine we have the
         hypothesis that a patient has flu, we don't know the symptoms it
@@ -55,13 +53,13 @@ Attributes
         Very similar to "goals_to_check" (and indeed of
         "initial_facts_dict"). We want to make the job easier at the moment
         of assigning goals and based on this only the list of goals is
-        needed, then a dictionary will be created with the data found in
+        needed, then a dictionary will be created with the data of
         "goals_to_check".
 
     inference_facts
         Inference facts are basically the core of an expert system. These
-        are facts that are found and copied when the a set of facts (initial
-        or inference) match with the causes of a goal.
+        are facts that are found and copied when the a set of facts
+        (initial, inference or asked) match with the causes of a goal.
 
         "inference_facts" is a AI::ExpertSystem::Advanced::Dictionary, it
         will store the name of the fact, the rule that caused these facts to
@@ -85,8 +83,7 @@ Attributes
         these asked facts will be stored here.
 
     visited_rules
-        Keeps a record of all the rules the algorithms have visited/checked.
-        Some of these rules may have been shot or not.
+        Keeps a record of all the rules the algorithms have visited.
 
     verbose
         By default this is turned off. If you want to know what happens
@@ -108,19 +105,19 @@ Attributes
 
         You can decide to use the viewers
         AI::ExpertSystem::Advanced::Viewer::Factory offers, in this case you
-        can pass the object or only the class name of your favorite viewer.
+        can pass the object or only the name of your favorite viewer.
 
     found_factor
         In your knowledge database you can give different *weights* to the
-        facts of each rule (eg to define what facts have more priority than
-        others). During the "backward()" algorithm it will be checking what
-        causes are found in the "inference_facts" and in the "asked_facts"
+        facts of each rule (eg to define what facts have more *priority*).
+        During the "mixed()" algorithm it will be checking what causes are
+        found in the "inference_facts" and in the "asked_facts"
         dictionaries, then the total number of matches (or total number of
-        certainity factors of each fact) will be compared against the value
+        certainity factors of each fact) will be compared versus the value
         of this factor, if it's higher or equal then the rule will be
         triggered.
 
-        You can read the documentation of the "backward()" algorithm to know
+        You can read the documentation of the "mixed()" algorithm to know
         the two ways this factor can be used.
 
     shot_rules
@@ -128,9 +125,9 @@ Attributes
         of each item is the rule id while its value is the precision time
         when the rule was shot.
 
-        The precision time is useful to know when a rule was shot and based
-        on that you can know what steps it followed so you can compare (or
-        reproduce) them.
+        The precision time is useful for knowing when a rule was shot and
+        based on that you can know what steps it followed so you can compare
+        (or reproduce) them.
 
 Constants
     * FACT_SIGN_NEGATIVE
@@ -153,7 +150,7 @@ Methods
     *   If an initial or asked fact matches with a cause but it's negative
         then all of its goals (usually only one by rule) will be copied to
         the "initial_facts_dict" and "inference_facts" with a negative sign,
-        otherwise a positive sign will be triggered.
+        otherwise a positive sign will be used.
 
     *   Will add the rule to the "shot_rules" hash.
 
@@ -190,9 +187,9 @@ Methods
     *   Asked facts
 
     It will be couting the matches of all of the above dictionaries, so for
-    example if we have four causes, two make match with initial facts, one
-    with inference facts and another with asked facts then it will evaluate
-    to true since we have a match of all the four causes.
+    example if we have four causes, two make match with initial facts, other
+    with inference and the remaining one with the asked facts, then it will
+    evaluate to true since we have a match of the four causes.
 
   get_causes_match_factor($rule)
     Similar to "compare_causes_with_facts()" but with the difference that it
@@ -228,11 +225,11 @@ Methods
     Adds the given $rule to the end of the "visited_rules".
 
   copy_to_goals_to_check($facts)
-    Copies a list of facts (usually a list of causes of a rule) to the
-    "goals_to_check" dictionary.
+    Copies a list of facts (usually a list of causes of a rule) to
+    <goals_to_check_dict>.
 
   ask_about($fact)
-    Uses "viewer" to ask the user if he knows of the given "fact".
+    Uses "viewer" to ask the user for the existence of the given "fact".
 
     The valid answers are:
 
@@ -240,7 +237,7 @@ Methods
         In case user knows of it.
 
     - or "FACT_SIGN_NEGATIVE"
-        In cae user doesn't knows of it.
+        In case user doesn't knows of it.
 
     ~ or "FACT_SIGN_UNSURE"
         In case user doesn't have any clue about the given fact.
@@ -254,11 +251,11 @@ Methods
     Systems. It starts with a set of variables (known as initial facts) and
     reads the available rules.
 
-    It will be reading rule by rule and for each rule it will compare its
+    It will be reading rule by rule and for each one it will compare its
     causes with the initial facts and with the inference facts. If all of
     these causes are in our facts then the rule will be shoot and all of its
-    goals will be copied/converted to initial and inference facts and will
-    restart reading from the first rule.
+    goals will be copied/converted to inference facts and will restart
+    reading from the first rule.
 
   backward()
     The backward algorithm starts with a set of *assumed* goals (facts). It
@@ -302,37 +299,37 @@ Methods
     mixed algorithm also ends unsuccessfully.
 
     Once the first *run* of "forward()" algorithm happens it starts looking
-    for any possitive inference fact, if only one is found then this ends
-    the algorithm with the assumption it knows what's happening.
+    for any positive inference fact, if only one is found then this ends the
+    algorithm with the assumption it knows what's happening.
 
-    In case no possitive inference fact was found then it will start reading
+    In case no positive inference fact was found then it will start reading
     the rules and creating a list of intuitive facts.
 
     For each rule it will get a *certainty factor* of its causes versus the
     "initial_facts_dict", "inference_facts" and "asked_facts". In case the
     certainity factor is greater or equal than "found_factor" then all of
     its goals will be copied to the intuitive facts (eg, read it as: it
-    assumes the goals have something to be with our first initial facts).
+    assumes the goals have something to do with our first initial facts).
 
     Once all the rules are read then it verifies for any intuitive fact, if
     no facts are found then it ends with the intuition, otherwise it will
     run the "backward()" algorithm for each one of these facts (eg, each
     fact will be converted to a goal). After each *run* of the "backward()"
-    algorithm it will verify for any possitive inference fact, if just one
-    is found then the algorithm ends.
+    algorithm it will verify for any positive inference fact, if just one is
+    found then the algorithm ends.
 
-    At the end (if there are still no possitive inference facts) it will run
+    At the end (if there are still no positive inference facts) it will run
     the "forward()" algorithm and restarts (by looking again for any
-    possitive inference fact).
+    positive inference fact).
 
     A good example to understand how this algorithm is useful is: imagine
     you are a doctor and know some of the symptoms and diseases of a
-    patient. Then the algorithm will start by looking for any additional
+    patient. Then the algorithm will start looking for any additional
     disease you could be missing. Then once it ends looking for diseases it
-    will check if we know what the disease is (by looking for the possitive
+    will check if we know what the disease is (by looking for the positive
     fact). If there's still no clue then it starts looking in *viceversa*,
     now knowing a list of possible diseases and also a list of symptoms. It
-    repeats all the process until a possitive *inference* fact is found.
+    repeats all the process until a positive *inference* fact is found.
 
   summary($return)
     The main purpose of any expert system is the ability to explain: what is

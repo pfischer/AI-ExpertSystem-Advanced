@@ -20,7 +20,7 @@ context cause otherwise L<AI::ExpertSystem::Advanced> will die.
 =cut
 use Moose;
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 use constant NO_ABSTRACT_CLASS_MSG =>
     qq#Sorry, you can't call the abstract class!#;
@@ -70,8 +70,8 @@ sub ask {
 
 =head2 B<explain($yaml_summary)>
 
-Uses to explain what happened. The passed argument is in YAML string that
-has all the information required to make a good explanation.
+Used to explain what happened. The passed argument is a YAML string that has
+all the information required to make a good explanation.
 
 =cut
 sub explain {

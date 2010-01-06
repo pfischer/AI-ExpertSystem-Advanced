@@ -23,7 +23,7 @@ as MySQL or SQLite.
 use Moose;
 use AI::ExpertSystem::Advanced::Dictionary;
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 =head1 Attributes
 
@@ -74,7 +74,7 @@ sub read {
 
 Returns all the goals (usually only one) of the given C<$rule>.
 
-The goals B<should> are returned as a L<AI::ExpertSystem::Advanced::Dictionary>.
+The goals B<should> be returned as a L<AI::ExpertSystem::Advanced::Dictionary>.
 
 B<NOTE>: Rewrite this method if you are not going to use the C<rules> hash (eg,
 you will use a database engine).
@@ -100,7 +100,7 @@ sub rule_goals {
 
 Returns all the causes of the given C<$rule>.
 
-Same as C<rule_goals()>, the causes are returned as a
+Same as C<rule_goals()>, the causes should be returned as a
 L<AI::ExpertSystem::Advanced::Dictionary>.
 
 B<NOTE>: Rewrite this method if you are not going to use the C<rules> hash (eg,
@@ -127,7 +127,7 @@ sub rule_causes {
 
 Looks for the first rule that has the given C<goal> in its goals.
 
-If a rule is found then its number is returned, otherwise an C<undef> is
+If a rule is found then its number is returned, otherwise C<undef> is
 returned.
 
 B<NOTE>: Rewrite this method if you are not going to use the C<rules> hash (eg,
@@ -170,10 +170,10 @@ sub get_question {
 =head2 B<get_next_rule($current_rule)>
 
 Returns the ID of the next rule. When there are no more rules to work then
-undef should be returned.
+C<undef> should be returned.
 
 When it starts looking for the first rule, C<$current_rule> value will
-be undef.
+be C<undef>.
 
 B<NOTE>: Rewrite this method if you are not going to use the C<rules> hash (eg,
 you will use a database engine).
