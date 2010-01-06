@@ -1,5 +1,5 @@
 ---
-abstract: 'Expert System with complete algorithms'
+abstract: 'Expert System with backward, forward and mixed algorithms'
 author:
   - 'Pablo Fischer (pablo@pablo.com.mx).'
 build_requires:
@@ -25,4 +25,4 @@ requires:
 resources:
   license: http://dev.perl.org/licenses/
   repository: http://github.com/pfischer/AI-ExpertSystem-Advanced
-version: 0.01
+version: 0.02
