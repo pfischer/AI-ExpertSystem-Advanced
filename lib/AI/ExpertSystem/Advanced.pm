@@ -157,13 +157,13 @@ has 'asked_facts' => (
 
 =item B<visited_rules>
 
-Keeps a record of all the rules the algorithms have visited.
+Keeps a record of all the rules the algorithms have visited and also the number
+of causes each rule has.
 
 =cut
 has 'visited_rules' => (
         is => 'ro',
-        isa => 'ArrayRef[Str]',
-        default => sub { return []; });
+        isa => 'AI::ExpertSystem::Advanced::Dictionary');
 
 =item B<verbose>
 
@@ -560,7 +560,7 @@ sub is_goal_in_our_facts {
     return undef;
 }
 
-=head2 B<remove_last_visited_rule()>
+=head2 B<remove_last_ivisited_rule()>
 
 Removes the last visited rule and return its number.
 
@@ -568,28 +568,40 @@ Removes the last visited rule and return its number.
 sub remove_last_visited_rule {
     my ($self) = @_;
 
-    return pop(@{$self->{'visited_rules'}});
+    my $last = $self->{'visited_rules'}->iterate;
+    if (defined $last) {
+        $self->{'visited_rules'}->remove($last);
+        $self->{'visited_rules'}->populate_iterable_array();
+    }
+    return $last;
 }
 
-=head2 B<visit_rule($rule)>
+=head2 B<visit_rule($rule, $total_causes)>
 
 Adds the given C<$rule> to the end of the C<visited_rules>.
 
 =cut
 sub visit_rule {
-    my ($self, $rule) = @_;
+    my ($self, $rule, $total_causes) = @_;
 
-    return unshift(@{$self->{'visited_rules'}}, $rule);
+    $self->{'visited_rules'}->prepend($rule,
+            {
+                causes_total => $total_causes,
+                causes_pending => $total_causes
+            });
+    $self->{'visited_rules'}->populate_iterable_array();
 }
 
-=head2 B<copy_to_goals_to_check($facts)>
+=head2 B<copy_to_goals_to_check($rule, $facts)>
 
 Copies a list of facts (usually a list of causes of a rule) to
 <goals_to_check_dict>.
 
+The rule of the goals that are being copied is stored also in the hash.
+
 =cut
 sub copy_to_goals_to_check {
-    my ($self, $facts) = @_;
+    my ($self, $rule, $facts) = @_;
 
     while(my $fact = $facts->iterate_reverse) {
         $self->{'goals_to_check_dict'}->prepend(
@@ -597,6 +609,7 @@ sub copy_to_goals_to_check {
                 {
                     name => $fact,
                     sign => $facts->get_value($fact, 'sign'),
+                    rule => $rule
                 });
     }
 }
@@ -760,6 +773,9 @@ sub backward {
             if ($self->is_goal_in_our_facts($goal)) {
                 $self->{'viewer'}->debug("The goal $goal is in our facts")
                     if $self->{'debug'};
+                # Matches with any visiited rule?
+                my $rule_no = $self->{'goals_to_check_dict'}->get_value(
+                        $goal, 'rule');
                 # Take out this goal so we don't end with an infinite loop
                 $self->{'viwer'}->debug("Removing $goal from goals to check")
                     if $self->{'debug'};
@@ -767,17 +783,41 @@ sub backward {
                 # Update the iterator
                 $self->{'goals_to_check_dict'}->populate_iterable_array();
                 # no more goals, what about rules?  
-                if (scalar(@{$self->{'visited_rules'}}) eq 0) {
+                if ($self->{'visited_rules'}->size() eq 0) {
                     $self->{'viewer'}->debug("No more goals to read")
                         if $self->{'verbose'};
                     $more_goals = 0;
                     next WAIT_FOR_MORE_GOALS;
                 }
-                # Take out the last visited rule and shoot it
-                my $last_rule = $self->remove_last_visited_rule();
-                $self->{'viewer'}->debug("Going to shoot $last_rule")
-                    if $self->{'debug'};
-                $self->shoot($last_rule, 'backward');
+                if (defined $rule_no) {
+                    my $causes_total = $self->{'visited_rules'}->get_value(
+                            $rule_no, 'causes_total');
+                    my $causes_pending = $self->{'visited_rules'}->get_value(
+                            $rule_no, 'causes_pending');
+                    if (defined $causes_total and defined $causes_pending) {
+                        # No more pending causes for this rule, lets shoot it
+                        if ($causes_pending-1 le 0) {
+                            my $last_rule = $self->remove_last_visited_rule();
+                            if ($last_rule eq $rule_no) {
+                                $self->{'viewer'}->debug("Going to shoot $last_rule")
+                                    if $self->{'debug'};
+                                $self->shoot($last_rule, 'backward');
+                            } else {
+                                $self->{'viewer'}->print_error(
+                                        "Seems the rule ($rule_no) of goal " .
+                                        "$goal is not the same as the last " .
+                                        "visited rule ($last_rule)");
+                                $more_goals = 0;
+                                next WAIT_FOR_MORE_GOALS;
+                            }
+                        } else {
+                            $self->{'visited_rules'}->update($rule_no,
+                                    {
+                                        causes_pending => $causes_pending-1
+                                    });
+                        }
+                    }
+                }
                 # How many objetives we have? if we are zero then we are done
                 if ($self->{'goals_to_check_dict'}->size() lt 0) {
                     $more_goals = 0;
@@ -795,9 +835,9 @@ sub backward {
                     # Causes of this rule
                     my $rule_causes = $self->get_causes_by_rule($rule_of_goal);
                     # Copy the causes of this rule to our goals to check
-                    $self->copy_to_goals_to_check($rule_causes);
+                    $self->copy_to_goals_to_check($rule_of_goal, $rule_causes);
                     # We just *visited* this rule, lets check it
-                    $self->visit_rule($rule_of_goal);
+                    $self->visit_rule($rule_of_goal, $rule_causes->size());
                     # and yes.. we have more goals to check!
                     $self->{'goals_to_check_dict'}->populate_iterable_array();
                     $more_goals = 1;
@@ -921,7 +961,6 @@ sub mixed {
 
             my $factor = $self->get_causes_match_factor($current_rule);
             if ($factor ge $self->{'found_factor'} && $factor lt 1.0) {
-                print "Matches with $current_rule\n";
                 # Copy all of the goals (usually only one) of the current rule to
                 # the intuitive facts
                 my $goals = $self->get_goals_by_rule($current_rule);
@@ -1083,6 +1122,8 @@ sub BUILD {
     $self->{'asked_facts'} = AI::ExpertSystem::Advanced::Dictionary->new;
     $self->{'goals_to_check_dict'} = AI::ExpertSystem::Advanced::Dictionary->new(
             stack => $self->{'goals_to_check'});
+    $self->{'visited_rules'} = AI::ExpertSystem::Advanced::Dictionary->new(
+            stack => []);
 }
 
 =head1 SEE ALSO

@@ -20,7 +20,6 @@ my $ai = AI::ExpertSystem::Advanced->new(
         viewer_class => 'terminal',
         knowledge_db => $yaml_kdb,
         goals_to_check => ['H']);
-$ai->forward();
 $ai->backward();
 $ai->summary();
 

@@ -95,7 +95,10 @@ sub find {
     }
 
     if ($find_by eq 'id') {
-        return defined $self->{'stack_hash'}->{$look_for};
+        if (defined $self->{'stack_hash'}->{$look_for}) {
+            return $look_for;
+        }
+        return undef;
     }
 
     foreach my $key (keys %{$self->{'stack_hash'}}) {
@@ -133,7 +136,6 @@ sub get_value {
     my ($self, $id, $key) = @_;
 
     if (!defined $self->{'stack_hash'}->{$id}) {
-        warn "$id does not exist in this dictionary";
         return undef;
     }
     if (defined $self->{'stack_hash'}->{$id}->{$key}) {
@@ -171,6 +173,27 @@ sub prepend {
     return $self->_add($id, 1, @_);
 }
 
+=head2 B<update($id, %extra_keys)>
+
+Updates the I<extra> keys of the element that matches the given C<$id>.
+
+Please note that it will only update or add new keys. So if the given element
+already has a key and this is not provided in C<%extra_keys> then it wont
+be modified.
+
+=cut
+sub update {
+    my ($self, $id, $properties) = @_;
+
+    if (defined $self->{'stack_hash'}->{$id}) {
+        foreach my $key (keys %$properties) {
+            $self->{'stack_hash'}->{$id}->{$key} = $properties->{$key};
+        }
+    } else {
+        warn "Not updating $id, does not exist!";
+    }
+}
+
 =head2 B<remove($id)>
 
 Removes the element that matches the given C<$id> from C<stack_hash> and
@@ -182,13 +205,13 @@ Returns true if the removal is successful, otherwise false is returned.
 sub remove {
     my ($self, $id) = @_;
 
-    if (my $key = $self->find($id)) {
-        delete($self->{'stack_hash'}->{$key});
+    if (defined $self->{'stack_hash'}->{$id}) {
+        delete($self->{'stack_hash'}->{$id});
         # Find the index in the array, lets suppose our arrays are big
         my $index = List::MoreUtils::first_index {
-            defined $_ and $_ eq $key
+            defined $_ and $_ eq $id
         } @{$self->{'stack'}};
-        delete(@{$self->{'stack'}}[$index]);
+        splice(@{$self->{'stack'}}, $index, 1);
         return 1;
     }
     return 0;
