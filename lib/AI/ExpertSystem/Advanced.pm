@@ -829,7 +829,8 @@ sub backward {
             } else {
                 # Ugh, the fact is not in our inference facts or asked facts,
                 # well, lets find the rule where this fact belongs
-                if (my $rule_of_goal = $self->get_rule_by_goal($goal)) {
+                my $rule_of_goal =  $self->get_rule_by_goal($goal);
+                if (defined $rule_of_goal) {
                     $self->{'viewer'}->debug("Found a rule with $goal as a goal")
                         if $self->{'debug'};
                     # Causes of this rule

@@ -23,7 +23,7 @@ as MySQL or SQLite.
 use Moose;
 use AI::ExpertSystem::Advanced::Dictionary;
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 =head1 Attributes
 
