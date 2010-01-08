@@ -19,7 +19,8 @@ my $yaml_kdb = AI::ExpertSystem::Advanced::KnowledgeDB::Factory->new('yaml',
 my $ai = AI::ExpertSystem::Advanced->new(
         viewer_class => 'terminal',
         knowledge_db => $yaml_kdb,
-        initial_facts => ['I']);
+        initial_facts => ['I'],
+        verbose => 1);
 $ai->mixed();
 $ai->summary();
 

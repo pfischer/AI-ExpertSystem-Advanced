@@ -3,7 +3,6 @@ rules:
         causes:
             - 
                 name: K
-                factor: 0.5
             - 
                 name: L
         goals:

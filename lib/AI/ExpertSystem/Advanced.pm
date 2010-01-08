@@ -306,32 +306,23 @@ sub shoot {
     my $rule_goals = $self->get_goals_by_rule($rule);
     my $any_negation = 0;
     $rule_causes->populate_iterable_array();
+    # Also make sure we are going to read from position 0 in our dicts
+    foreach my $dict (qw(initial_facts_dict inference_facts asked_facts)) {
+        $self->{$dict}->populate_iterable_array();
+    }
     while(my $caused_fact = $rule_causes->iterate) {
         # Now, from the current rule fact, any of the facts were marked
-        # as *negative* from the initial facts? (read: user gave a list of
-        # initial facts to work with but he also knows of certain facts
-        # that should be excluded or facts that he knows should not modify
-        # the final result)
+        # as *negative* from the initial facts, inference or asked facts?
         $any_negation = 0;
-        while(my $initial_fact = $self->{'initial_facts_dict'}->iterate) {
-            if ($initial_fact eq $caused_fact) {
-                if ($self->is_fact_negative(
-                            'initial_facts_dict',
-                            $initial_fact)) {
-                    $any_negation = 1;
-                    last;
-                }
-            }
-        }
-        # so.. the fact is negative?
-        # no, then perhaps we asked the user about it?
-        while(my $asked_fact = $self->{'asked_facts'}->iterate) {
-            if ($asked_fact eq $caused_fact) {
-                if ($self->is_fact_negative(
-                            'asked_facts',
-                            $asked_fact)) {
-                    $any_negation = 1;
-                    last;
+        foreach my $dict (qw(initial_facts_dict inference_facts asked_facts)) {
+            while(my $dict_fact = $self->{$dict}->iterate) {
+                if ($dict_fact eq $caused_fact) {
+                    if ($self->is_fact_negative(
+                                $dict,
+                                $dict_fact)) {
+                        $any_negation = 1;
+                        last;
+                    }
                 }
             }
         }
@@ -540,11 +531,15 @@ Checks if the given C<$goal> is in:
 
 =item *
 
-The asked facts
+The inference facts
 
 =item *
 
-The inference facts
+The initial facts
+
+=item *
+
+The asked facts
 
 =back
 
@@ -552,7 +547,7 @@ The inference facts
 sub is_goal_in_our_facts {
     my ($self, $goal) = @_;
 
-    foreach my $dict (qw(asked_facts inference_facts)) {
+    foreach my $dict (qw(initial_facts_dict inference_facts asked_facts)) {
         if (my $fact = $self->{$dict}->find($goal)) {
             return 1;
         }
@@ -924,6 +919,8 @@ sub mixed {
         return 0;
     }
 
+    use Data::Dumper;
+
     while(1) {
         # We are satisfied if only one inference fact is positive (eg, means we
         # got to our result)
@@ -937,7 +934,6 @@ sub mixed {
             }
         }
 
-#        my $intuitive_facts_array = [];
         my $intuitive_facts = AI::ExpertSystem::Advanced::Dictionary->new(
                 stack => []);
 
@@ -991,8 +987,10 @@ sub mixed {
                         sign => $intuitive_facts->get_value($fact, 'sign')
                     });
             $self->{'goals_to_check_dict'}->populate_iterable_array();
+            print "Running backward for $fact\n";
             if (!$self->backward()) {
                 $self->{'viewer'}->debug("Backward exited");
+                return 1;
             }
             # Now we have inference facts, anything positive?
             $self->{'inference_facts'}->populate_iterable_array();
