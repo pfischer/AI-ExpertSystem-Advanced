@@ -89,7 +89,18 @@ sub rule_goals {
     my @facts;
     # Get all the facts of this goal (usually only one)
     foreach (@{$self->{'rules'}->[$rule]->{'goals'}}) {
-        push(@facts, $_);
+        my $id;
+        # it has an ID?
+        if (defined $_->{'id'}) {
+            $id = $_->{'id'};
+        } elsif (defined $_->{'name'}) { # or a name?
+            $id = $_->{'name'};
+        }
+        if (defined $id) {
+            push(@facts, $id);
+        } else {
+            confess "Seems rule $rule does not have an id or name key";
+        }
     }
     my $goals_dict = AI::ExpertSystem::Advanced::Dictionary->new(
             stack => \@facts);
@@ -116,7 +127,18 @@ sub rule_causes {
     my @facts;
     # Get all the facts of this cause
     foreach (@{$self->{'rules'}->[$rule]->{'causes'}}) {
-        push(@facts, $_->{'name'});
+        my $id;
+        # it has an ID?
+        if (defined $_->{'id'}) {
+            $id = $_->{'id'};
+        } elsif (defined $_->{'name'}) { # or a name?
+            $id = $_->{'name'};
+        }
+        if (defined $id) {
+            push(@facts, $id);
+        } else {
+            confess "Seems rule $rule does not have an id or name key";
+        }
     }
     my $causes_dict = AI::ExpertSystem::Advanced::Dictionary->new(
             stack => \@facts);
@@ -140,8 +162,13 @@ sub find_rule_by_goal {
     my $rule_counter = 0;
     foreach my $rule (@{$self->{'rules'}}) {
         foreach my $rule_goal (@{$rule->{'goals'}}) {
-            if ($rule_goal eq $goal) {
-                return $rule_counter;
+            # Look in id and name for the match
+            foreach my $look_in (qw(id name)) {
+                if (defined $rule_goal->{$look_in}) {
+                    if ($rule_goal->{$look_in} eq $goal) {
+                        return $rule_counter;
+                    }
+                }
             }
         }
         $rule_counter++;

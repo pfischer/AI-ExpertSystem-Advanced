@@ -35,6 +35,26 @@ Uses certainty factors.
 
 =back
 
+=head1 SYNOPSIS
+
+An example of the mixed algorithm:
+
+    use AI::ExpertSystem::Advanced;
+    use AI::ExpertSystem::Advanced::KnowledgeDB::Factory;
+
+    my $yaml_kdb = AI::ExpertSystem::Advanced::KnowledgeDB::Factory->new('yaml',
+        {
+            filename => 'examples/knowledge_db_one.yaml'
+        });
+
+    my $ai = AI::ExpertSystem::Advanced->new(
+            viewer_class => 'terminal',
+            knowledge_db => $yaml_kdb,
+            initial_facts => ['I'],
+            verbose => 1);
+    $ai->mixed();
+    $ai->summary();
+
 =cut
 use Moose;
 use AI::ExpertSystem::Advanced::KnowledgeDB::Base;
@@ -44,7 +64,7 @@ use AI::ExpertSystem::Advanced::Dictionary;
 use Time::HiRes qw(gettimeofday);
 use YAML::Syck qw(Dump);
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 =head1 Attributes
 
@@ -55,11 +75,29 @@ our $VERSION = '0.02';
 A list/set of initial facts the algorithms start using.
 
 During the forward algorithm the task is to find a list of goals caused
-by these initial facts (the only data it has at that moment).
+by these initial facts (the only data we have in that moment).
 
 Lets imagine your knowledge database is about symptoms and diseases. You need
 to find what diseases are caused by the symptoms of a patient, these first
 symptons are the initial facts.
+
+Initial facts as also asked and inference facts can be negative or positive. By
+default the initial facts are positive.
+
+Keep in mind that the data contained in this array can be the IDs or the name
+of the fact.
+
+This array will be converted to L<initial_facts_dict>. And all the data (ids or
+or names) will be made of only IDs.
+
+    my $ai = AI::ExpertSystem::Advanced->new(
+            viewer_class => 'terminal',
+            knowledge_db => $yaml_kdb,
+            initial_facts => ['I', ['F', '-'], ['G', '+']);
+
+As you can see if you want to provide the sign of a fact, just I<encapsulate>
+it in an array, the first item should be the fact and the second one the
+sign.
 
 =cut
 has 'initial_facts' => (
@@ -69,11 +107,9 @@ has 'initial_facts' => (
 
 =item B<initial_facts_dict>
 
-For making easier your job, L<AI::ExpertSystem::Advanced> asks you only the id
-of the C<initial_facts>. Once you provide them then a dictinary is created.
-
-This C<initial_facts_dict> dictionary basically provides a standard interface
-to get the sign of the facts.
+This dictionary (see L<AI::ExpertSystem::Advanced::Dictionary> has the sasme
+data of L<initial_facts> but with the additional feature(s) of proviing
+iterators and a quick way to find elements.
 
 =cut
 has 'initial_facts_dict' => (
@@ -82,17 +118,25 @@ has 'initial_facts_dict' => (
 
 =item B<goals_to_check>
 
-When doing the C<backward()> algorithm it's needed to have at least one goal
+    my $ai = AI::ExpertSystem::Advanced->new(
+            viewer_class => 'terminal',
+            knowledge_db => $yaml_kdb,
+            goals_to_check => ['J']);
+
+When doing the L<backward()> algorithm it's required to have at least one goal
 (aka hypothesis).
 
-This could be pretty similar to C<initial_facts>, with the difference that the
-initial facts are used more with the causes of the rules, and this one with
+This could be pretty similar to L<initial_facts>, with the difference that the
+initial facts are used more with the causes of the rules and this one with
 the goals (usually one in a well defined knowledge database).
+
+The same rule of L<initial_facts> apply here, you can provide the sign of the
+facts and you can provide the id or the name of them.
 
 From our example of symptoms and diseases lets imagine we have the hypothesis
 that a patient has flu, we don't know the symptoms it has, we want the
 expert system to keep asking us for them to make sure that our hypothesis
-is correct.
+is correct (or incorrect in case there's not enough information).
 
 =cut
 has 'goals_to_check' => (
@@ -102,10 +146,10 @@ has 'goals_to_check' => (
 
 =item B<goals_to_check_dict>
 
-Very similar to C<goals_to_check> (and indeed of C<initial_facts_dict>). We
-want to make the job easier at the moment of assigning goals and based on this
-only the list of goals is needed, then a dictionary will be created with the
-data of C<goals_to_check>.
+Very similar to L<goals_to_check> (and indeed of L<initial_facts_dict>). We
+want to make the job easier.
+
+It will be a dictionary made of the data of L<goals_to_check>.
 
 =cut
 has 'goals_to_check_dict' => (
@@ -115,12 +159,12 @@ has 'goals_to_check_dict' => (
 =item B<inference_facts>
 
 Inference facts are basically the core of an expert system. These are facts
-that are found and copied when the a set of facts (initial, inference or
-asked) match with the causes of a goal.
+that are found and copied when a set of facts (initial, inference or asked)
+match with the causes of a goal.
 
-C<inference_facts> is a L<AI::ExpertSystem::Advanced::Dictionary>, it will
+L<inference_facts> is a L<AI::ExpertSystem::Advanced::Dictionary>, it will
 store the name of the fact, the rule that caused these facts to be copied to
-this dictionary, the sign and the algorithm that triggered the copy.
+this dictionary, the sign and the algorithm that triggered it.
 
 =cut
 has 'inference_facts' => (
@@ -140,14 +184,14 @@ has 'knowledge_db' => (
 
 =item B<asked_facts>
 
-During the C<backward()> algorithm there will be cases when there's no clarity
-if a fact exists. In these cases the C<backward()> will be asking the user
+During the L<backward()> algorithm there will be cases when there's no clarity
+if a fact exists. In these cases the L<backward()> will be asking the user
 (via automation or real questions) if a fact exists.
 
-Going back to the C<initial_facts> example of symptoms and diseases. Imagine
+Going back to the L<initial_facts> example of symptoms and diseases. Imagine
 the algorithm is checking a rule, some of the facts of the rule make a match
-with the ones of C<initial_facts> or C<inference_facts> but some wont, for
-these I<unsure> facts the C<backward()> will ask the user if a symptom (a fact)
+with the ones of L<initial_facts> or L<inference_facts> but some wont, for
+these I<unsure> facts the L<backward()> will ask the user if a symptom (a fact)
 exists. All these asked facts will be stored here.
 
 =cut
@@ -167,11 +211,17 @@ has 'visited_rules' => (
 
 =item B<verbose>
 
+    my $ai = AI::ExpertSystem::Advanced->new(
+            viewer_class => 'terminal',
+            knowledge_db => $yaml_kdb,
+            initial_facts => ['I'],
+            verbose => 1);
+
 By default this is turned off. If you want to know what happens behind the
 scenes turn this on.
 
-Everything that needs to be debugged will be passed to the C<debug()> method
-of your C<viewer>.
+Everything that needs to be debugged will be passed to the L<debug()> method
+of your L<viewer>.
 
 =cut
 has 'verbose' => (
@@ -183,7 +233,7 @@ has 'verbose' => (
 
 Is the object L<AI::ExpertSystem::Advanced> will be using for printing what is
 happening and for interacting with the user (such as asking the
-C<asked_facts>).
+L<asked_facts>).
 
 This is practical if you want to use a viewer object that is not provided by
 L<AI::ExpertSystem::Advanced::Viewer::Factory>.
@@ -195,7 +245,7 @@ has 'viewer' => (
 
 =item B<viewer_class>
 
-Is the the class name of the C<viewer>.
+Is the the class name of the L<viewer>.
 
 You can decide to use the viewers L<AI::ExpertSystem::Advanced::Viewer::Factory>
 offers, in this case you can pass the object or only the name of your favorite
@@ -209,15 +259,15 @@ has 'viewer_class' => (
 
 =item B<found_factor>
 
-In your knowledge database you can give different *weights* to the facts of
+In your knowledge database you can give different I<weights> to the facts of
 each rule (eg to define what facts have more I<priority>). During the
-C<mixed()> algorithm it will be checking what causes are found in the
-C<inference_facts> and in the C<asked_facts> dictionaries, then the total
-number of matches (or total number of certainity factors of each fact) will
+L<mixed()> algorithm it will be checking what causes are found in the
+L<inference_facts> and in the L<asked_facts> dictionaries, then the total
+number of matches (or total number of certainity factors of each rule) will
 be compared versus the value of this factor, if it's higher or equal then the
 rule will be triggered.
 
-You can read the documentation of the C<mixed()> algorithm to know the two
+You can read the documentation of the L<mixed()> algorithm to know the two
 ways this factor can be used.
 
 =cut
@@ -280,19 +330,19 @@ Shoots the given rule. It will do the following verifications:
 
 =item *
 
-Each of the facts (causes) will be compared against the C<initial_facts_dict>
-and C<asked_facts> (in this order).
+Each of the facts (causes) will be compared against the L<initial_facts_dict>,
+L<inference_facts> and L<asked_facts> (in this order).
 
 =item *
 
-If an initial or asked fact matches with a cause but it's negative then all of
-its goals (usually only one by rule) will be copied to the C<initial_facts_dict>
-and C<inference_facts> with a negative sign, otherwise a positive sign will be
+If any initial, inference or asked fact matches with a cause but it's negative
+then all of its goals (usually only one by rule) will be copied to the
+L<inference_facts> with a negative sign, otherwise a positive sign will be
 used.
 
 =item *
 
-Will add the rule to the C<shot_rules> hash.
+Will add the rule to the L<shot_rules> hash.
 
 =back
 
@@ -306,15 +356,13 @@ sub shoot {
     my $rule_goals = $self->get_goals_by_rule($rule);
     my $any_negation = 0;
     $rule_causes->populate_iterable_array();
-    # Also make sure we are going to read from position 0 in our dicts
-    foreach my $dict (qw(initial_facts_dict inference_facts asked_facts)) {
-        $self->{$dict}->populate_iterable_array();
-    }
     while(my $caused_fact = $rule_causes->iterate) {
         # Now, from the current rule fact, any of the facts were marked
         # as *negative* from the initial facts, inference or asked facts?
         $any_negation = 0;
         foreach my $dict (qw(initial_facts_dict inference_facts asked_facts)) {
+            # Also make sure we are going to read from position 0 in our dicts
+            $self->{$dict}->populate_iterable_array();
             while(my $dict_fact = $self->{$dict}->iterate) {
                 if ($dict_fact eq $caused_fact) {
                     if ($self->is_fact_negative(
@@ -349,8 +397,9 @@ sub is_rule_shot {
 
 =head2 B<get_goals_by_rule($rule)>
 
-Will ask the C<knowledge_db> for the goals of the given C<$rule>. A
-L<AI::ExpertSystem::Advanced::Dictionary> will be returned.
+Will ask the L<knowledge_db> for the goals of the given C<$rule>.
+
+A L<AI::ExpertSystem::Advanced::Dictionary> will be returned.
 
 =cut
 sub get_goals_by_rule {
@@ -360,8 +409,9 @@ sub get_goals_by_rule {
 
 =head2 B<get_causes_by_rule($rule)>
 
-Will ask the C<knowledge_db> for the causes of the given C<$rule>. A
-L<AI::ExpertSystem::Advanced::Dictionary> will be returned.
+Will ask the L<knowledge_db> for the causes of the given C<$rule>.
+
+A L<AI::ExpertSystem::Advanced::Dictionary> will be returned.
 
 =cut
 sub get_causes_by_rule {
@@ -388,7 +438,7 @@ sub is_fact_negative {
 =head2 B<copy_to_inference_facts($facts, $sign, $algorithm, $rule)>
 
 Copies the given C<$facts> (a dictionary, usually goal(s) of a rule) to the
-C<inference_facts> dictionary. All the given goals will be copied with the
+L<inference_facts> dictionary. All the given goals will be copied with the
 given C<$sign>.
 
 Additionally it will add the given C<$algorithm> and C<$rule> to the inference
@@ -456,12 +506,13 @@ sub compare_causes_with_facts {
 
 =head2 B<get_causes_match_factor($rule)>
 
-Similar to C<compare_causes_with_facts()> but with the difference that it will
-count the I<match factor> of each matched cause and return the total of this
+Similar to L<compare_causes_with_facts()> but with the difference that it will
+count the L<match factor> of each matched cause and return the total of this
 weight.
 
-The match factor is used by the C<mixed()> algorithm and is useful to know if
-a certain rule should be shoot or not.
+The match factor is used by the L<mixed()> algorithm and is useful to know if
+a certain rule should be shoot or not even if not all of the causes exist
+in our facts.
 
 The I<match factor> is calculated in two ways:
 
@@ -529,15 +580,15 @@ Checks if the given C<$goal> is in:
 
 =over 4
 
-=item *
-
-The inference facts
-
-=item *
+=item 1
 
 The initial facts
 
-=item *
+=item 2
+
+The inference facts
+
+=item 3
 
 The asked facts
 
@@ -548,7 +599,7 @@ sub is_goal_in_our_facts {
     my ($self, $goal) = @_;
 
     foreach my $dict (qw(initial_facts_dict inference_facts asked_facts)) {
-        if (my $fact = $self->{$dict}->find($goal)) {
+        if ($self->{$dict}->find($goal)) {
             return 1;
         }
     }
@@ -573,7 +624,7 @@ sub remove_last_visited_rule {
 
 =head2 B<visit_rule($rule, $total_causes)>
 
-Adds the given C<$rule> to the end of the C<visited_rules>.
+Adds the given C<$rule> to the end of the L<visited_rules>.
 
 =cut
 sub visit_rule {
@@ -590,9 +641,9 @@ sub visit_rule {
 =head2 B<copy_to_goals_to_check($rule, $facts)>
 
 Copies a list of facts (usually a list of causes of a rule) to
-<goals_to_check_dict>.
+L<goals_to_check_dict>.
 
-The rule of the goals that are being copied is stored also in the hash.
+The rule ID of the goals that are being copied is also stored in the hahs.
 
 =cut
 sub copy_to_goals_to_check {
@@ -611,21 +662,21 @@ sub copy_to_goals_to_check {
 
 =head2 B<ask_about($fact)>
 
-Uses C<viewer> to ask the user for the existence of the given C<fact>.
+Uses L<viewer> to ask the user for the existence of the given C<$fact>.
 
 The valid answers are:
 
 =over 4
 
-=item B<+> or C<FACT_SIGN_POSITIVE>
+=item B<+> or L<FACT_SIGN_POSITIVE>
 
 In case user knows of it.
 
-=item B<-> or C<FACT_SIGN_NEGATIVE>
+=item B<-> or L<FACT_SIGN_NEGATIVE>
 
 In case user doesn't knows of it.
 
-=item B<~> or C<FACT_SIGN_UNSURE>
+=item B<~> or L<FACT_SIGN_UNSURE>
 
 In case user doesn't have any clue about the given fact.
 
@@ -647,7 +698,7 @@ sub ask_about {
 
 =head2 B<get_rule_by_goal($goal)>
 
-Looks in the C<knowledge_db> for the rule that has the given goal. If a rule
+Looks in the L<knowledge_db> for the rule that has the given goal. If a rule
 is found its number is returned, otherwise undef.
 
 =cut
@@ -659,15 +710,29 @@ sub get_rule_by_goal {
 
 =head2 B<forward()>
 
+    use AI::ExpertSystem::Advanced;
+    use AI::ExpertSystem::Advanced::KnowledgeDB::Factory;
+
+    my $yaml_kdb = AI::ExpertSystem::Advanced::KnowledgeDB::Factory->new('yaml',
+            {
+                filename => 'examples/knowledge_db_one.yaml'
+            });
+
+    my $ai = AI::ExpertSystem::Advanced->new(
+            viewer_class => 'terminal',
+            knowledge_db => $yaml_kdb,
+            initial_facts => ['F', 'J']);
+    $ai->forward();
+    $ai->summary();
+
 The forward chaining algorithm is one of the main methods used in Expert
 Systems. It starts with a set of variables (known as initial facts) and reads
 the available rules.
 
 It will be reading rule by rule and for each one it will compare its causes
-with the initial facts and with the inference facts. If all of these causes
-are in our facts then the rule will be shoot and all of its goals will be
-copied/converted to inference facts and will restart reading from the first
-rule.
+with the initial, inference and asked facts. If all of these causes are in the
+facts then the rule will be shoot and all of its goals will be copied/converted
+to inference facts and will restart reading from the first rule.
 
 =cut
 sub forward {
@@ -717,9 +782,25 @@ sub forward {
 
 =head2 B<backward()>
 
+    use AI::ExpertSystem::Advanced;
+    use AI::ExpertSystem::Advanced::KnowledgeDB::Factory;
+
+    my $yaml_kdb = AI::ExpertSystem::Advanced::KnowledgeDB::Factory->new('yaml',
+        {
+            filename => 'examples/knowledge_db_one.yaml'
+            });
+
+    my $ai = AI::ExpertSystem::Advanced->new(
+            viewer_class => 'terminal',
+            knowledge_db => $yaml_kdb,
+            goals_to_check => ['J']);
+    $ai->backward();
+    $ai->summary();
+
 The backward algorithm starts with a set of I<assumed> goals (facts). It will
 start reading goal by goal. For each goal it will check if it exists in the
-C<asked_facts> and C<inference_facts>.
+initial, inference and asked facts (see L<is_goal_in_our_facts()>) for more
+information).
 
 =over 4
 
@@ -728,29 +809,28 @@ C<asked_facts> and C<inference_facts>.
 If the goal exist then it will be removed from the dictionary, it will also
 verify if there are more visited rules to shoot.
 
-If there are still more visited rules to shoot then it will take the last one
-and remove it. Then this visited rule will be shoot. Once the rule is shoot
-it verifies if there are still still more goals to check, if this is the case
-then it starts reading from the first goal (at this time the
-C<goals_to_check_dict> is reduced by 1. However if there are no more goals to
-check then it will finish, making the end of the algorithm.
+If there are still more visited rules to shoot then it will check from what
+rule the goal comes from, if it was copied from a rule then this data will
+exist. With this information then it will see how many of the causes of this
+given rule are still in the L<goals_to_check_dict>.
 
-In case there are no more visited rules to shoot then it will finish making
-the end of the algorithm.
+In case there are still causes of this rule in L<goals_to_check_dict> then the
+amount of causes pending will be reduced by one. Otherwise (if the amount is
+0) then the rule of this last removed goal will be shoot.
 
 =item *
 
-If the goal doesn't exist in the C<asked_facts> or C<inference_facts> then the
-goal will be searched in the list of goals of all the rules.
+If the goal doesn't exist in the mentioned facts then the goal will be searched
+in the goals of every rule.
 
 In case it finds the rule that has the goal, this rule will be marked (added)
-to the list of visited rules (C<visited_rules>). Also all of the causes of this
-rule will be added to the top of the C<goals_to_check_dict>. Once this is done
-it will start reading again all of the goals to check.
+to the list of visited rules (L<visited_rules>) and also all of its causes
+will be added to the top of the L<goals_to_check_dict> and it will start
+reading again all the goals.
 
-If there's the case where the goal doesn't exist as a goal in our rules then
-it will ask the user (via C<ask_about>) for the existence of it. If user is not
-sure about it then the algorithm ends.
+If there's the case where the goal doesn't exist as a goal in the rules then
+it will ask the user (via L<ask_about()>) for the existence of it. If user is
+not sure about it then the algorithm ends.
 
 =back
 
@@ -870,45 +950,46 @@ sub backward {
 
 =head2 B<mixed()>
 
-As its name says, it's a mix of C<forward()> and C<backward()> algorithms, it
+As its name says, it's a mix of L<forward()> and L<backward()> algorithms, it
 requires to have at least one initial fact.
 
-The first thing it does is to run the C<forward()> algorithm (hence the need of
+The first thing it does is to run the L<forward()> algorithm (hence the need of
 at least one initial fact). If the algorithm fails then the mixed algorithm
 also ends unsuccessfully.
 
-Once the first I<run> of C<forward()> algorithm happens it starts looking for
+Once the first I<run> of L<forward()> algorithm happens it starts looking for
 any positive inference fact, if only one is found then this ends the algorithm
 with the assumption it knows what's happening.
 
-In case no positive inference fact was found then it will start reading the
+In case no positive inference fact is found then it will start reading the
 rules and creating a list of intuitive facts.
 
 For each rule it will get a I<certainty factor> of its causes versus the
-C<initial_facts_dict>, C<inference_facts> and C<asked_facts>. In case the
-certainity factor is greater or equal than C<found_factor> then all of its
-goals will be copied to the intuitive facts (eg, read it as: it assumes the
-goals have something to do with our first initial facts).
+initial, inference and asked facts. In case the certainity factor is greater or
+equal than L<found_factor> then all of its goals will be copied to the
+intuitive facts (eg, read it as: it assumes the goals have something to do with
+our first initial facts).
 
-Once all the rules are read then it verifies for any intuitive fact, if no
-facts are found then it ends with the intuition, otherwise it will run the
-C<backward()> algorithm for each one of these facts (eg, each fact will
-be converted to a goal). After each I<run> of the C<backward()> algorithm
-it will verify for any positive inference fact, if just one is found then
-the algorithm ends.
+Once all the rules are read then it verifies if there are intuitive facts, if
+no facts are found then it ends with the intuition, otherwise it will run the
+L<backward()> algorithm for each one of these facts (eg, each fact will be
+converted to a goal). After each I<run> of the L<backward()> algorithm it will
+verify for any positive inference fact, if just one is found then the algorithm
+ends.
 
-At the end (if there are still no positive inference facts) it will run
-the C<forward()> algorithm and restarts (by looking again for any
-positive inference fact).
+At the end (if there are still no positive inference facts) it will run the
+L<forward()> algorithm and restart (by looking again for any positive inference
+fact).
 
 A good example to understand how this algorithm is useful is: imagine you are
-a doctor and know some of the symptoms and diseases of a patient. Then the
-algorithm will start looking for any additional disease you could be missing.
-Then once it ends looking for diseases it will check if we know what the
-disease is (by looking for the positive fact). If there's still no clue then
-it starts looking in I<viceversa>, now knowing a list of possible diseases and
-also a list of symptoms. It repeats all the process until a positive
-I<inference> fact is found.
+a doctor and know some of the symptoms of a patient. Probably with the first
+symptoms you have you can get to a positive conclusion (eg that a patient has
+I<X> disease). However in case there's still no clue, then a set of questions
+(done by the call of L<backward()>) of symptons related to the initial symptoms
+will be asked to the user. For example, we know that that the patient has a
+headache but that doesn't give us any positive answer, what if the patient has
+flu or another disease? Then a set of these I<related> symptons will be asked
+to the user.
 
 =cut
 sub mixed {
@@ -1012,15 +1093,15 @@ sub mixed {
 =head2 B<summary($return)>
 
 The main purpose of any expert system is the ability to explain: what is
-happening, how it got to a result, what assumption it required to make,
-which facts it excluded and which used.
+happening, how it got to a result, what assumption(s) it required to make,
+the fatcs that were excluded and the ones that were used.
 
-This method will use the C<viewer> (or return the result) in YAML format of all
+This method will use the L<viewer> (or return the result) in YAML format of all
 the rules that were shot. It will explain how it got to each one of the causes
-so a better explanation can be done by the C<viewer>.
+so a better explanation can be done by the L<viewer>.
 
 If C<$return> is defined (eg, it got any parameter) then the result wont be
-passed to the C<viewer>, instead it will be returned as a string.
+passed to the L<viewer>, instead it will be returned as a string.
 
 =cut
 sub summary {

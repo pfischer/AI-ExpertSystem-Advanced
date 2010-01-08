@@ -13,13 +13,22 @@ AI::ExpertSystem::Advanced::KnowledgeDB::Factory - Knowledge DB driver factory
 
 Uses the factory pattern to create instances of knowledge database drivers.
 
+=head1 SYNOPSIS
+
+    use AI::ExpertSystem::Advanced::KnowledgeDB::Factory;
+
+    my $yaml_kdb = AI::ExpertSystem::Advanced::KnowledgeDB::Factory->new('yaml',
+        {
+            filename => 'examples/knowledge_db_one.yaml'
+        });
+
 =cut
 use strict;
 use warnings;
 use Class::Factory;
 use base qw(Class::Factory);
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 sub new {
     my ($pkg, $type, @params) = @_;
@@ -46,4 +55,3 @@ it under the same terms as Perl itself.
 =cut
 
 1;
-

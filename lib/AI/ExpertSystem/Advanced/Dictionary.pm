@@ -35,7 +35,7 @@ Adding or removing elements from the stack.
 use Moose;
 use List::MoreUtils qw(firstidx);
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 =head1 Attributes
 
@@ -91,10 +91,6 @@ sub find {
     my ($self, $look_for, $find_by) = @_;
 
     if (!defined($find_by)) {
-        $find_by = 'name';
-    }
-
-    if ($find_by eq 'id') {
         if (defined $self->{'stack_hash'}->{$look_for}) {
             return $look_for;
         }
@@ -107,18 +103,6 @@ sub find {
         }
     }
     return undef;
-}
-
-=head2 B<find_by_name($name)>
-
-A simple wrapper of C<find()>. It will look for the the name of a given item
-in our C<stack_hash>.
-
-=cut
-sub find_by_name {
-    my ($self, $name) = @_;
-
-    return $self->find($name, 'name');
 }
 
 =head2 B<get_value($id, $key)>
