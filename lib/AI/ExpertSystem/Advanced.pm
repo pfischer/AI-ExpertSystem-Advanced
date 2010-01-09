@@ -64,7 +64,7 @@ use AI::ExpertSystem::Advanced::Dictionary;
 use Time::HiRes qw(gettimeofday);
 use YAML::Syck qw(Dump);
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 =head1 Attributes
 
@@ -123,7 +123,7 @@ has 'initial_facts_dict' => (
             knowledge_db => $yaml_kdb,
             goals_to_check => ['J']);
 
-When doing the L<backward()> algorithm it's required to have at least one goal
+When doing the L<"backward()"> algorithm it's required to have at least one goal
 (aka hypothesis).
 
 This could be pretty similar to L<initial_facts>, with the difference that the
@@ -184,14 +184,14 @@ has 'knowledge_db' => (
 
 =item B<asked_facts>
 
-During the L<backward()> algorithm there will be cases when there's no clarity
-if a fact exists. In these cases the L<backward()> will be asking the user
+During the L<"backward()"> algorithm there will be cases when there's no clarity
+if a fact exists. In these cases the L<"backward()"> will be asking the user
 (via automation or real questions) if a fact exists.
 
 Going back to the L<initial_facts> example of symptoms and diseases. Imagine
 the algorithm is checking a rule, some of the facts of the rule make a match
 with the ones of L<initial_facts> or L<inference_facts> but some wont, for
-these I<unsure> facts the L<backward()> will ask the user if a symptom (a fact)
+these I<unsure> facts the L<"backward()"> will ask the user if a symptom (a fact)
 exists. All these asked facts will be stored here.
 
 =cut
@@ -220,7 +220,7 @@ has 'visited_rules' => (
 By default this is turned off. If you want to know what happens behind the
 scenes turn this on.
 
-Everything that needs to be debugged will be passed to the L<debug()> method
+Everything that needs to be debugged will be passed to the L<"debug()"> method
 of your L<viewer>.
 
 =cut
@@ -261,13 +261,13 @@ has 'viewer_class' => (
 
 In your knowledge database you can give different I<weights> to the facts of
 each rule (eg to define what facts have more I<priority>). During the
-L<mixed()> algorithm it will be checking what causes are found in the
+L<"mixed()"> algorithm it will be checking what causes are found in the
 L<inference_facts> and in the L<asked_facts> dictionaries, then the total
 number of matches (or total number of certainity factors of each rule) will
 be compared versus the value of this factor, if it's higher or equal then the
 rule will be triggered.
 
-You can read the documentation of the L<mixed()> algorithm to know the two
+You can read the documentation of the L<"mixed()"> algorithm to know the two
 ways this factor can be used.
 
 =cut
@@ -506,11 +506,11 @@ sub compare_causes_with_facts {
 
 =head2 B<get_causes_match_factor($rule)>
 
-Similar to L<compare_causes_with_facts()> but with the difference that it will
-count the L<match factor> of each matched cause and return the total of this
+Similar to L<"compare_causes_with_facts()"> but with the difference that it will
+count the I<match factor> of each matched cause and return the total of this
 weight.
 
-The match factor is used by the L<mixed()> algorithm and is useful to know if
+The match factor is used by the L<"mixed()"> algorithm and is useful to know if
 a certain rule should be shoot or not even if not all of the causes exist
 in our facts.
 
@@ -799,7 +799,7 @@ sub forward {
 
 The backward algorithm starts with a set of I<assumed> goals (facts). It will
 start reading goal by goal. For each goal it will check if it exists in the
-initial, inference and asked facts (see L<is_goal_in_our_facts()>) for more
+initial, inference and asked facts (see L<"is_goal_in_our_facts()">) for more
 information).
 
 =over 4
@@ -829,7 +829,7 @@ will be added to the top of the L<goals_to_check_dict> and it will start
 reading again all the goals.
 
 If there's the case where the goal doesn't exist as a goal in the rules then
-it will ask the user (via L<ask_about()>) for the existence of it. If user is
+it will ask the user (via L<"ask_about($fact)">) for the existence of it. If user is
 not sure about it then the algorithm ends.
 
 =back
@@ -950,14 +950,14 @@ sub backward {
 
 =head2 B<mixed()>
 
-As its name says, it's a mix of L<forward()> and L<backward()> algorithms, it
+As its name says, it's a mix of L<"forward()"> and L<"backward()"> algorithms, it
 requires to have at least one initial fact.
 
-The first thing it does is to run the L<forward()> algorithm (hence the need of
+The first thing it does is to run the L<"forward()"> algorithm (hence the need of
 at least one initial fact). If the algorithm fails then the mixed algorithm
 also ends unsuccessfully.
 
-Once the first I<run> of L<forward()> algorithm happens it starts looking for
+Once the first I<run> of L<"forward()"> algorithm happens it starts looking for
 any positive inference fact, if only one is found then this ends the algorithm
 with the assumption it knows what's happening.
 
@@ -972,20 +972,20 @@ our first initial facts).
 
 Once all the rules are read then it verifies if there are intuitive facts, if
 no facts are found then it ends with the intuition, otherwise it will run the
-L<backward()> algorithm for each one of these facts (eg, each fact will be
-converted to a goal). After each I<run> of the L<backward()> algorithm it will
+L<"backward()"> algorithm for each one of these facts (eg, each fact will be
+converted to a goal). After each I<run> of the L<"backward()"> algorithm it will
 verify for any positive inference fact, if just one is found then the algorithm
 ends.
 
 At the end (if there are still no positive inference facts) it will run the
-L<forward()> algorithm and restart (by looking again for any positive inference
+L<"forward()"> algorithm and restart (by looking again for any positive inference
 fact).
 
 A good example to understand how this algorithm is useful is: imagine you are
 a doctor and know some of the symptoms of a patient. Probably with the first
 symptoms you have you can get to a positive conclusion (eg that a patient has
 I<X> disease). However in case there's still no clue, then a set of questions
-(done by the call of L<backward()>) of symptons related to the initial symptoms
+(done by the call of L<"backward()">) of symptons related to the initial symptoms
 will be asked to the user. For example, we know that that the patient has a
 headache but that doesn't give us any positive answer, what if the patient has
 flu or another disease? Then a set of these I<related> symptons will be asked
